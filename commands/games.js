@@ -15,16 +15,14 @@ exports.run = async (client, message, args) => {
         getGames(uuid).then(async games => {
             // return first 50 games
             if (!games.games.length) return message.channel.send("No games found.")
-            games = await getFirst(25, games.games)
+            games = getFirst(25, games.games)
             let embed = new EmbedBuilder()
             console.log(games.length)
             if (games.length == 0) return message.channel.send("No recent games found.")
             if (!args[0]) {
                 //get first game
                 let game = games[0];
-                let ongoing
-                if (game.ended) ongoing = false
-                else ongoing = true
+                let ongoing = game.ended ? false : true
                 let gameType = game.gameType.toLowerCase()
                 gameType = gameType.charAt(0).toUpperCase() + gameType.slice(1)
                 if (!game.map) game.map = "N/A"
@@ -34,34 +32,21 @@ exports.run = async (client, message, args) => {
                 embed.setAuthor({ name: name, iconURL: "https://minotar.net/avatar/" + uuid + '.png', url: "https://minotar.net/avatar/" + uuid + '.png' })
                 embed.setThumbnail(`https://hypixel.net/styles/hypixel-v2/images/game-icons/${gameType}-64.png`)
                 embed.setDescription(`Ongoing: ${ongoing} | Map: ${game.map} | Type: ${game.gameType} | Mode: ${game.mode}`)
-                embed.addFields({ name: "Started At: ", value: `${new Date(game.date)}`, inline: false })
-                let duration = null
-                if (game.ongoing == true) {
-                    //calculate duration from start time to now
-                    let startTime = new Date(game.date)
-                    let now = new Date()
-                    let diff = now - startTime
-                    let seconds = diff / 1000
-                    let minutes = seconds / 60
-                    let hours = minutes / 60
-                    minutes = Math.floor(minutes)
-                    duration = `${minutes} minutes`
-                    embed.addFields({ name: "Duration: ", value: duration, inline: false })
-                    embed.addFields({ name: "Ended At:", value: "N/A", inline: false })
-                }
-                if (game.ended) {
-                    //calculate duration from start time to end time
-                    let startTime = new Date(game.date)
-                    let endTime = new Date(game.ended)
-                    let diff = endTime - startTime
-                    let seconds = diff / 1000
-                    let minutes = seconds / 60
-                    let hours = minutes / 60
-                    minutes = Math.floor(minutes)
-                    duration = `~${minutes} minutes`
-                    embed.addFields({ name: "Duration: ", value: duration, inline: false })
-                    embed.addFields({ name: "Ended At:", value: `${endTime}`, inline: false })
-                }
+                
+
+                let startTime = new Date(game.date)
+                let endTime = game.ended || new Date()  // if the game not yet finished, use current time
+                let diff = endTime - startTime
+                let seconds = diff / 1000
+                let minutes = seconds / 60
+                let hours = minutes / 60
+                minutes = Math.floor(minutes)
+                
+                let duration = `~${minutes} minutes`  // approximate
+                embed.addFields({ name: "Started At: ", value: startTime, inline: false })
+                embed.addFields({ name: "Duration:", value: duration, inline: false })
+                embed.addFields({ name: "Ended At:", value: ongoing ? "N/A" : endTime, inline: false})
+
                 //send embed
                 message.channel.send({ embeds: [embed] })
                 return
@@ -70,7 +55,7 @@ exports.run = async (client, message, args) => {
                 let embed = new EmbedBuilder()
                 embed.setTitle(`Viewing ${games.length} recent games from ${name}`)
                 embed.setColor(0x0011FF)
-                embed.setAuthor({ name: name, iconURL: "https://minotar.net/avatar/" + uuid + '.png', url: "https://minotar.net/avatar/" + uuid + '.png' })
+                embed.setAuthor({ name: name, iconURL: `https://minotar.net/avatar/${uuid}.png`, url: `https://minotar.net/avatar/${uuid}.png` })
                 let i = 0
                 games.forEach(game => {
                     i++
@@ -82,7 +67,7 @@ exports.run = async (client, message, args) => {
                 //check if args[0] is a number
                 if (isNaN(+args[0])) return
                 let game = games[args[0] - 1]
-                let ongoing
+                let ongoing = game.ended ? false : true
                 if (game.ended) ongoing = false
                 else ongoing = true
                 let gameType = game.gameType.toLowerCase()
@@ -94,34 +79,22 @@ exports.run = async (client, message, args) => {
                 embed.setAuthor({ name: name, iconURL: "https://minotar.net/avatar/" + uuid + '.png', url: "https://minotar.net/avatar/" + uuid + '.png' })
                 embed.setThumbnail(`https://hypixel.net/styles/hypixel-v2/images/game-icons/${gameType}-64.png`)
                 embed.setDescription(`Ongoing: ${ongoing} | Map: ${game.map} | Type: ${game.gameType} | Mode: ${game.mode}`)
-                embed.addFields({ name: "Started At: ", value: `${new Date(game.date)}`, inline: false })
-                let duration = null
-                if (game.ongoing == true) {
-                    //calculate duration from start time to now
-                    let startTime = new Date(game.date)
-                    let now = new Date()
-                    let diff = now - startTime
-                    let seconds = diff / 1000
-                    let minutes = seconds / 60
-                    let hours = minutes / 60
-                    minutes = Math.floor(minutes)
-                    duration = `${minutes} minutes`
-                    embed.addFields({ name: "Duration: ", value: duration, inline: false })
-                    embed.addFields({ name: "Ended At:", value: "N/A", inline: false })
-                }
-                if (game.ended) {
-                    //calculate duration from start time to end time
-                    let startTime = new Date(game.date)
-                    let endTime = new Date(game.ended)
-                    let diff = endTime - startTime
-                    let seconds = diff / 1000
-                    let minutes = seconds / 60
-                    let hours = minutes / 60
-                    minutes = Math.floor(minutes)
-                    duration = `~${minutes} minutes`
-                    embed.addFields({ name: "Duration: ", value: duration, inline: false })
-                    embed.addFields({ name: "Ended At:", value: `${endTime}`, inline: false })
-                }
+                
+                let startTime = new Date(game.date)
+                let endTime = game.ended || new Date()
+                let diff = endTime - startTime
+                let seconds = diff / 1000
+                let minutes = seconds / 60
+                let hours = minutes / 60
+                minutes = Math.floor(minutes)
+                let duration = `~${minutes} minutes`
+
+
+
+                embed.addFields({ name: "Started At: ", value: startTime, inline: false })
+                embed.addFields({ name: "Duration: ", value: duration, inline: false })
+                embed.addFields({ name: "Ended At:", value: ongoing ? "N/A" : endTime, inline: false })
+                
                 //send embed
                 message.channel.send({ embeds: [embed] })
             }
